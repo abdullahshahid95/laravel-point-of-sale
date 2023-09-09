@@ -1,0 +1,1050 @@
+@extends('master')
+
+@section('content')
+<div id="spinner" class=""></div>
+<div id="overlay" class=""></div>
+
+<div id="my-jumbotron" class="jumbotron">
+    <div class="row">
+        <div class="col-2">
+            <a class="btn btn-success" onclick="refreshSale()">Refresh</a>
+        </div>
+        <div class="col-3">
+            <div class="row">
+                <div class="col-12">
+                    <select id="customer" class="form-control" style="width: 90%;">
+                        <option value="1">Walk-in customer</option>
+                        @foreach ($customers as $customer)
+                            <option value="{{ $customer->id }}">{{ $customer->name . ' - ' . $customer->phone}}</option>
+                        @endforeach
+                    </select>
+                    <button type="button" class="btn btn-primary pt-0 pb-1 pl-1 pr-1" onclick="openAddCustomerDialogue()" title="Add customer">+</button>
+                </div>
+            </div>
+            <div class="row d-none" id="not-collected-row">
+                <div class="col-6" style="padding-right: 0;">
+                    <input id="receiving-date" type="date" class="form-control" style="width: 95%; font-size: smaller;">
+                </div>
+                <div class="col-6" style="padding-left: 0;">
+                    <input id="receiving-time" type="time" class="form-control" style="width: 80%; font-size: smaller;">
+                </div>
+            </div>
+        </div>
+        <div class="col-3">
+            <div class="row">
+                <div class="col-12">
+                    <input type="radio" id="received" name="status" value="2" checked>
+                    <label for="received">Collected</label>
+                    |
+                    <input type="radio" id="not-received" name="status" value="1">
+                    <label for="not-received">Not Collected</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <input type="radio" id="take-away" name="type" value="2" checked>
+                    <label for="take-away">Take Away</label>
+                    |
+                    <input type="radio" id="home-delivery" name="type" value="1">
+                    <label for="home-delivery">Home Delivery</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+    <div id="no-print">
+        <div class="row">
+            <div class="col-8">
+                <div class="row mb-2">
+                    <div class="col-6">
+                        <input type="text" id="barcode" class="form-control" placeholder="Barcode"/>
+                    </div>
+                    <div class="col-6">
+                        <button type="button" title="List" class="btn btn-primary float-right" id="table-view-button" onclick="openTableView()">
+                            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-list-ul" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M5 11.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm-3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+                            </svg>
+                        </button>
+                        <button type="button" title="Grid" class="btn btn-primary float-right mr-2 " id="grid-view-button" style="background-color: #6574cd; border: 1px solid #6574cd;" onclick="openGridView()">
+                            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-grid-3x3-gap-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M1 2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V2zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V2zM1 7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V7zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V7zM1 12a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-2zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-2zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-2z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="row items-row-inactive" id="items-table-view">
+                    <div class="col-12">
+                        <table class="table table-hover" id="items-table">
+                            <thead>
+                                <th>
+                                    Item
+                                </th>
+                            </thead>
+                            <tbody>
+                                @foreach ($items as $item)
+                                    <tr onclick="selectItem({{ $item->id }}, '{{ $item->name }}', {{ $item->price }}, {{ $item->average_unit_cost }}, {{ $item->discount_type }}, {{ $item->discount }}, {{ $item->tax_type }}, {{ $item->tax }}, {{ $item->unit_id }}, @if(posConfigurations()->maintain_inventory == 1){{ $item->quantity }}@else {{ 100000000 }} @endif)">
+                                        <td>{{ $item->name }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="row" id="items-grid-view">
+                    <div class="col-12">
+                        <div class="tab" id="category-tabs">
+                            @foreach ($categories as $category)
+                                <button class="tablinks" id="{{ 'category-' . $category->name }}" onclick="openTab(event, '{{ $category->name }}')">{{ $category->name }}</button>
+                            @endforeach
+                        </div>
+                        @foreach ($categories as $category)
+                            <div id="{{ $category->name }}" class="tabcontent" style="height: 500px; overflow: scroll;">
+                                <div class="row sale-item-row">
+                                    @foreach ($items as $item)
+                                        @if($item->category_id == $category->id)
+                                        <div class="col-2 sale-item-col" id="item-col-{{ $item->id }}" data-id="{{ $item->id }}" onclick="selectItem({{ $item->id }}, '{{ $item->name }}', {{ $item->price }}, {{ $item->average_unit_cost }}, {{ $item->discount_type }}, {{ $item->discount }}, {{ $item->tax_type }}, {{ $item->tax }}, {{ $item->unit_id }}, @if(posConfigurations()->maintain_inventory == 1){{ $item->quantity }}@else {{ 100000000 }} @endif)">
+                                            <a class="sale-item-link" data-id="{{ $item->id }}" data-price="{{ $item->price }}" data-unit="{{ $item->unit_name }}">
+                                                <figure class="figure">
+                                                    <img src="{{ url('/uploads/') . '/' . ($item->image ?? 'noimage.png') }}" width="120" class="figure-img img-fluid rounded" alt="{{ $item->name }}">
+                                                    <figcaption class="figure-caption text-center" id="figcaption-{{ $item->id }}" data-category="{{ $category->name }}" data-item="{{ $item->name }}" data-id="{{ $item->id }}">{{ $item->name }} <span id="tick-mark{{$item->id}}" class="selection-mark hidden-item">✔</span></figcaption>
+                                                </figure>
+                                            </a>
+                                        </div>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            <div class="col-4 sale-items-list">
+                <div class="row mb-3">
+                    <div class="col-3 payment-fields-cols">
+                        <label for="total">S.Total</label>
+                        <input type="text" id="total" name="total" class="form-control" readonly>
+                    </div>
+                    <div class="col-3 payment-fields-cols">
+                        <label for="cash">Cash</label>
+                        <input type="number" min="1" id="cash" class="form-control"  name="cash" oninput="onCashInput()" required/>
+                    </div>
+                    <div class="col-3 payment-fields-cols">
+                        <label for="payment">Payment</label>
+                        <input type="number" min="1" id="payment" class="form-control"  name="payment" oninput="onPaymentInput()" required/>
+                    </div>
+                    <div class="col-3 pt-0 pb-0 border-top border-bottom">
+                        <input type="checkbox" id="toggle-print" checked /><label for="toggle-print">Print</label>
+                        <button type="button" id="print-button" class="submitBtn no-print btn btn-primary float-right" onclick="checkout()">
+                            <svg width="2.5em" height="2.5em" viewBox="0 0 16 16" class="bi bi-printer-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5z"/>
+                                <path fill-rule="evenodd" d="M11 9H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/>
+                                <path fill-rule="evenodd" d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                            </svg>
+                        </button>
+                        <small class="float-right d-none" id="loading-text">
+                            Saving <?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.0" width="20%" height="20%" viewBox="0 0 128 128" xml:space="preserve"><g><path d="M78.75 16.18V1.56a64.1 64.1 0 0 1 47.7 47.7H111.8a49.98 49.98 0 0 0-33.07-33.08zM16.43 49.25H1.8a64.1 64.1 0 0 1 47.7-47.7V16.2a49.98 49.98 0 0 0-33.07 33.07zm33.07 62.32v14.62A64.1 64.1 0 0 1 1.8 78.5h14.63a49.98 49.98 0 0 0 33.07 33.07zm62.32-33.07h14.62a64.1 64.1 0 0 1-47.7 47.7v-14.63a49.98 49.98 0 0 0 33.08-33.07z" fill="#000000" fill-opacity="1"/><animateTransform attributeName="transform" type="rotate" from="0 64 64" to="-90 64 64" dur="400ms" repeatCount="indefinite"></animateTransform></g></svg>
+                        </small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-3 payment-fields-cols">
+                        <label for="subTotal">Total</label>
+                        <input type="number" id="subTotal" class="form-control" value="" readonly disabled>
+                    </div>
+                    <div class="col-3 payment-fields-cols">
+                        <label for="change">Change</label>
+                        <input type="number" id="change" class="form-control" readonly disabled>
+                    </div>
+                    <div class="col-3 payment-fields-cols">
+                        <label for="balance">Balance</label>
+                        <input type="number" id="balance" class="form-control" readonly disabled>
+                    </div>
+                    <div class="col-3 payment-fields-cols">
+                        <label for="total">Discount</label>
+                        <input type="number" min="0" value="" id="discount" name="discount" class="form-control" oninput="onDiscountInput()">
+                    </div>
+                </div>
+                <div class="row" style="height: 500px;overflow: scroll">
+                    <div class="col-12">
+                        <table class="table table-hover table-bordered" id="item-sales-table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Quantity</th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th>Price</th>
+                                    <th class="no-print">Delete</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sales">
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>   
+    </div>
+</div>
+
+<!-- The Modal -->
+<div id="add-customer-modal" class="add-customer-modal">
+    <!-- Modal content -->
+    <div class="add-customer-modal-content">
+        <div class="row">
+            <div class="col-6">
+                <h3>Add Customer</h3>
+            </div>
+            <div class="col-6">
+                <span id="add-customer-modal-close" class="add-customer-modal-close" onclick="closeAddCustomerDialogue()">&times;</span>
+            </div>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="form-group col-12">
+                <div class="col-6 pl-5">
+                    <form id="add-customer-form" action="#" onsubmit="addCustomer(event)">
+                    @csrf
+                    <div class="form-group row">
+                        <label for="name" class="col-md-4 col-form-label text-md-right">Name</label>
+                        <div class="col-md-6">
+                            <input id="name" type="text" class="form-control @error('name') is-invalid @enderror" name="name" value="{{ old('name') }}" required autocomplete="name">                                    
+                            
+                            @error('name')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label for="phone" class="col-md-4 col-form-label text-md-right">Phone</label>
+                        <div class="col-md-6">
+                            <input id="phone" type="text" class="form-control @error('phone') is-invalid @enderror" name="phone" value="{{ old('phone') }}" autocomplete="phone">
+            
+                            @error('phone')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label for="address" class="col-md-4 col-form-label text-md-right">Address</label>
+                        <div class="col-md-6">
+                            <textarea rows="10" cols="12" id="address" class="form-control @error('address') is-invalid @enderror" name="address" value="{{ old('address') }}" autocomplete="address"></textarea>
+            
+                            @error('address')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-md-4"></div>
+                        <div class="col-md-6">
+                            <button class="btn btn-primary float-right" type="submit">Submit</button>
+                        </div>
+                    </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javaScript">
+    document.getElementsByClassName("tabcontent")[0].style.display = "block";
+    document.getElementsByClassName("tablinks")[0].classList.add("active");
+
+    function openTab(evt, tabName) 
+    {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+        tablinks = document.getElementsByClassName("tablinks");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+    }
+
+    var allItems = "{{json_encode($items->toArray())}}";
+    allItems = allItems.replace(/&quot;/g,'"');
+    allItems = JSON.parse(allItems);
+
+    var status = 2;
+    var type = 2;
+
+    var selectedItems = [];
+    var checkOutData = {
+        discount: 0,
+        total: 0,
+        subTotal: 0,
+        payment: 0,
+        cash: 0,
+        change: 0,
+        date: null,
+        receiptNumber: null
+    }
+    var selectedCustomerId = 1;
+    var currentItemId = 0;
+    var saleRows = ``;
+    var quantityHtml = ``;
+
+    var checkOutLoading = false;
+    var itemIds = [];
+    var selectedItemsLength = 0;
+    var ItemIdsLength = 0;
+
+    for (let i = 0; i < document.getElementsByName('status').length; i++) 
+    {
+        document.getElementsByName('status')[i].addEventListener('change', function(){
+            if(this.value == 1)
+            {
+                document.getElementById('not-collected-row').classList.remove('d-none');
+            }
+            else
+            {
+                document.getElementById('not-collected-row').classList.add('d-none');
+            }
+            
+            status = this.value;
+        });
+    }
+
+    for (let i = 0; i < document.getElementsByName('type').length; i++) 
+    {
+        document.getElementsByName('type')[i].addEventListener('change', function(){
+            type = this.value;
+        });
+    }
+
+    document.getElementById('barcode').addEventListener('input', function(){
+        let barcode = this.value.trim();
+
+        if(barcode != '' && barcode != null)
+        {
+            if(allItems.findIndex(item => item.label == barcode) > 0)
+            {
+                let item = allItems.find(item => item.label == barcode);
+                selectItem(item.id, item.name, item.price, item.average_unit_cost, item.discount_type, item.discount, item.tax_type, item.tax, item.unit_id, item.quantity);
+
+                document.getElementById("barcode").value = '';
+            }
+        }
+    });
+
+    function openGridView()
+    {
+        document.getElementById("items-table-view").style.display = 'none';
+        document.getElementById("items-grid-view").style.display = 'block';
+
+        document.getElementById("grid-view-button").style.backgroundColor = '#6574cd';
+        document.getElementById("grid-view-button").style.border = '1px solid #6574cd';
+
+        document.getElementById("table-view-button").style.backgroundColor = '#3490dc';
+        document.getElementById("table-view-button").style.border = '1px solid #3490dc';
+    }
+
+    function openTableView()
+    {
+        document.getElementById("items-table-view").style.display = 'block';
+        document.getElementById("items-grid-view").style.display = 'none';
+
+        document.getElementById("table-view-button").style.backgroundColor = '#6574cd';
+        document.getElementById("table-view-button").style.border = '1px solid #6574cd';
+
+        document.getElementById("grid-view-button").style.backgroundColor = '#3490dc';
+        document.getElementById("grid-view-button").style.border = '1px solid #3490dc';
+    }
+
+    function addRows(itemId, type = null)
+    {
+        checkOutData.total = 0;
+        checkOutData.subTotal = 0;
+        saleRows = ``;
+        quantityHtml = ``;
+        selectedItems.forEach(item => {
+        item.quantity = parseFloat(parseFloat(item.quantity).toFixed(2));
+        if(type == null && item.id == itemId)
+        {
+            item.totalPrice = parseFloat((item.quantity * item.price).toFixed(2));
+        }
+        // if(item.totalPrice == 0)
+        // {
+        //     item.totalPrice = '';
+        // }
+        // else
+        // {
+        //     item.totalPrice = item.totalPrice.toFixed(2);
+        //     // if(item.totalPrice % 1 === 0)
+        //     // {
+        //     //     item.totalPrice = item.totalPrice;
+        //     // }
+        //     // else if(item.totalPrice.toFixed(0) - parseInt(item.totalPrice.toFixed(1)) > 0.4)
+        //     // {
+        //     //     item.totalPrice = item.totalPrice.toFixed(0) - 1;
+        //     // }
+        //     // else
+        //     // {
+        //     //     item.totalPrice = item.totalPrice.toFixed(0);
+        //     // }
+        // }
+
+        checkOutData.total += parseFloat(item.totalPrice);
+
+        if(item.unitId == 1)
+        {
+            quantityHtml = `    <input type="number" id="quantity` + item.id + `" value="` + parseFloat(item.quantity) + `" class="form-control" oninput="onQuantityInput(event, ` + item.id + `)" required>
+                                <strong class="ml-1">kg</strong>
+                            </td>
+                            <td width="25%">
+                                <input type="number" id="price` + item.id + `" value="` + parseFloat(item.totalPrice) + `" class="form-control" oninput="onPriceInput(event, ` + item.id + `)" required>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-primary change-quantity-btn" onclick="add1Kg(` + item.id + `)"><span class="quantity-arrow">↑</span> Kg</button><br>
+                                <button type="button" class="btn btn-primary change-quantity-btn" onclick="subtract1Kg(` + item.id + `)"><span class="quantity-arrow">↓</span> Kg</button>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-primary change-quantity-btn" onclick="add1Pao(` + item.id + `)"><span class="quantity-arrow">↑</span> Pao</button>
+                                <button type="button" class="btn btn-primary change-quantity-btn" onclick="subtract1Pao(` + item.id + `)"><span class="quantity-arrow">↓</span> Pao</button>`;
+        }
+        else if(item.unitId == 2)
+        {
+            quantityHtml = `    <input type="number" id="quantity` + item.id + `" min="1" max="` + item.maxQuantity + `" step="1" value="` + (item.quantity % 1 === 0? item.quantity: item.quantity.toFixed(2)) + `"
+                                            onkeypress="return event.charCode >= 48 && event.charCode <= 57" 
+                                            class="form-control" oninput="onQuantityInput(event, ` + item.id + `)" required>
+                                <strong id="dozen-quantity` + item.id + `">` + (parseInt(item.quantity / 12) > 0? (parseInt(item.quantity / 12) + ` Dozen ` + (item.quantity % 12 > 0? item.quantity % 12: ``)): ``) + `</strong>
+                            </td>
+                            <td></td>
+                            <td>
+                                <button type="button" class="btn btn-primary change-quantity-btn" onclick="add1Dozen(` + item.id + `)"><span class="quantity-arrow">↑</span> Dz</button>
+                                <button type="button" class="btn btn-primary change-quantity-btn" onclick="subtract1Dozen(` + item.id + `)"><span class="quantity-arrow">↓</span> Dz</button>
+                            </td>
+                            <td> 
+                                <button type="button" class="btn btn-primary change-quantity-btn" onclick="add1Piece(` + item.id + `, ` + 1 + `)"><span class="quantity-arrow">↑</span></button><br>
+                                <button type="button" class="btn btn-primary change-quantity-btn" onclick="subtract1Piece(` + item.id + `, ` + 1 + `)"><span class="quantity-arrow">↓</span></button>`;
+        }
+        else
+        {
+            quantityHtml = `    <input type="number" id="quantity` + item.id + `" min="1" max="` + item.maxQuantity + `" step="1" value="` + item.quantity + `"
+                                            onkeypress="return event.charCode >= 48 && event.charCode <= 57" 
+                                            class="form-control" oninput="onQuantityInput(event, ` + item.id + `)" required>
+                            </td>
+                            <td></td>
+                            <td>
+                                <button type="button" class="btn btn-primary change-quantity-btn" onclick="add1Piece(` + item.id + `, ` + 0 + `)"><span class="quantity-arrow">↑</span></button><br>
+                                <button type="button" class="btn btn-primary change-quantity-btn" onclick="subtract1Piece(` + item.id + `, ` + 0 + `)"><span class="quantity-arrow">↓</span></button>
+                            </td><td>`;
+        }
+
+        saleRows += `<tr>
+                        <td>
+                        ` + item.name + `
+                        </td>
+                        <td width="25%">
+                        ` + quantityHtml + `
+                        </td>
+                        <td>
+                        ` + item.totalPrice + `
+                        </td>
+                        <td class="no-print">
+                            <button type="button" class="btn btn-danger delete" onclick="removeItem(` + item.id + `)"><strong>X</strong></button>
+                        </td>
+                    </tr>`;
+        });
+
+        $("#sales").empty().append(saleRows);
+
+        checkOutData.subTotal = parseFloat((checkOutData.total - checkOutData.discount).toFixed(2)) > 0? parseFloat((checkOutData.total - checkOutData.discount).toFixed(2)): 0;
+        checkOutData.payment = checkOutData.subTotal;
+        checkOutData.balance = parseFloat((checkOutData.payment - checkOutData.subTotal).toFixed(2));
+        $("#total").val(checkOutData.total);
+        $("#subTotal").val(checkOutData.subTotal);
+        $("#payment").val(checkOutData.payment);
+        $("#balance").val(checkOutData.balance);
+    }
+
+    function selectItem(id, itemName, price, averageUnitCost, discountType, discount, taxType, tax, unitId, maxQuantity)
+    {
+        if(selectedItems.findIndex(item => item.id == id) < 0)
+        {
+            currentItemId = id;
+
+            selectedItems.push({id: id, name: itemName, price: price, averageUnitCost: averageUnitCost, discountType: discountType, discount: discount, taxType: taxType, tax: tax, quantity: (maxQuantity >= 1? 1: maxQuantity), totalPrice: price, unitId: unitId, maxQuantity: maxQuantity});
+
+            document.getElementById("tick-mark" + id).classList.remove("hidden-item");
+
+            addRows(id);
+        }
+        else
+        {
+            let item = selectedItems.find(item => item.id == id);
+
+            if(item.quantity + 1 <= item.maxQuantity)
+            {
+                selectedItems.find(item => item.id == id).quantity++
+                addRows(id);
+            }
+            else
+                alert("Maximum quantity allowed: " + item.maxQuantity);
+            
+            // var quantity = selectedItems.find(item => item.id == id).quantity; 
+            // var price = selectedItems.find(item => item.id == id).price;
+            // selectedItems.find(item => item.id == id).totalPrice = quantity * price; 
+        }
+    }
+
+    function removeItem(itemId)
+    {
+        selectedItems.splice(selectedItems.findIndex(item => item.id == itemId), 1);
+        
+        document.getElementById("tick-mark" + itemId).classList.add("hidden-item");
+
+        addRows(itemId);
+
+        onDiscountInput();
+        onCashInput();
+    }
+
+    function onQuantityInput(event, itemId)
+    {
+        if(event.target.value != selectedItems.find(item => item.id == itemId).quantity)
+        {
+            if(event.target.value != '')
+            {
+                var quantity = selectedItems.find(item => item.id == itemId).quantity;
+
+                if(parseFloat(event.target.value) <= selectedItems.find(item => item.id == itemId).maxQuantity)
+                    selectedItems.find(item => item.id == itemId).quantity = parseFloat(event.target.value);
+                else
+                    selectedItems.find(item => item.id == itemId).quantity = parseFloat(selectedItems.find(item => item.id == itemId).maxQuantity);
+            }
+            else
+                selectedItems.find(item => item.id == itemId).quantity = 0;
+            
+            addRows(itemId);
+
+            $("#quantity" + itemId).focus();
+            var temp = $("#quantity" + itemId).val();
+            $("#quantity" + itemId).val('');
+            $("#quantity" + itemId).val(temp);
+        }
+    }
+
+    function onPriceInput(event, itemId) 
+    {
+        let item = selectedItems.find(item => item.id == itemId);
+
+        if(event.target.value != '')
+        {
+            if(parseFloat(event.target.value)/item.price <= item.maxQuantity)
+            {
+                selectedItems.find(item => item.id == itemId).totalPrice = parseFloat(event.target.value);
+                selectedItems.find(item => item.id == itemId).quantity = parseFloat((parseFloat(event.target.value)/item.price).toFixed(2));
+                // selectedItems.find(item => item.id == itemId).quantity = parseFloat((parseFloat(event.target.value)/item.price).toString().match(/^-?\d+(?:\.\d{0,2})?/)[0]);
+            }
+            else
+            {
+                alert("Max price allowed: " + item.price * item.maxQuantity);
+            }
+        }
+        else
+        {
+            selectedItems.find(item => item.id == itemId).totalPrice = 0;
+            selectedItems.find(item => item.id == itemId).quantity = 0;
+        }
+
+        addRows(itemId, 1);
+
+        $("#price" + itemId).focus();
+        var temp = $("#price" + itemId).val();
+        $("#price" + itemId).val('');
+        $("#price" + itemId).val(temp);
+    }
+
+    function onDiscountInput()
+    {
+        if(parseFloat(document.getElementById("discount").value) > 0)
+        {
+            checkOutData.discount = document.getElementById("discount").value;
+        }
+        else
+        {
+            checkOutData.discount = 0;
+        }
+
+        checkOutData.subTotal = (checkOutData.total - checkOutData.discount) > 0? (checkOutData.total - checkOutData.discount): 0;
+        $("#subTotal").val(checkOutData.subTotal);
+
+        if(parseFloat(document.getElementById("cash").value) >= checkOutData.subTotal)
+        {
+            checkOutData.cash = document.getElementById("cash").value;
+        }
+        else
+        {
+            checkOutData.cash = checkOutData.subTotal;
+        }
+
+        checkOutData.change = (checkOutData.cash - checkOutData.subTotal) > 0? (checkOutData.cash - checkOutData.subTotal): 0;
+        $("#change").val(checkOutData.change);
+
+        if(document.getElementById("payment").value != null && document.getElementById("payment").value != '')
+        {
+            checkOutData.payment = checkOutData.subTotal;
+            $("#payment").val(checkOutData.payment);
+            // checkOutData.payment = document.getElementById("payment").value;
+        }
+        else
+        {
+            checkOutData.payment = 0;
+        }
+
+        checkOutData.balance =  (checkOutData.subTotal - checkOutData.payment) > 0? (checkOutData.subTotal - checkOutData.payment): 0;
+        $("#balance").val(checkOutData.balance);
+    }
+
+    function onCashInput()
+    {
+        if(checkOutData.subTotal > 0)
+        {
+            if(parseFloat(document.getElementById("cash").value) >= checkOutData.subTotal)
+            {
+                checkOutData.cash = document.getElementById("cash").value;
+            }
+            else
+            {
+                checkOutData.cash = checkOutData.subTotal;
+            }
+        }
+        else
+        {
+            checkOutData.cash = 0;
+        }
+
+        checkOutData.change = (checkOutData.cash - checkOutData.subTotal) > 0? (checkOutData.cash - checkOutData.subTotal): 0;
+        $("#change").val(checkOutData.change);
+    }
+
+    function onPaymentInput()
+    {
+        if(document.getElementById("payment").value != null && document.getElementById("payment").value != '')
+        {
+            checkOutData.payment = document.getElementById("payment").value;
+        }
+        else
+        {
+            checkOutData.payment = 0;
+        }
+
+        checkOutData.balance =  (checkOutData.subTotal - checkOutData.payment) > 0? (checkOutData.subTotal - checkOutData.payment): 0;
+        $("#balance").val(checkOutData.balance);
+    }
+
+    function add1Pao(itemId)
+    {
+        let item = selectedItems.find(item => item.id == itemId);
+        if(item.quantity + 0.25 <= item.maxQuantity)
+        {
+            selectedItems.find(item => item.id == itemId).quantity += 0.25;
+            addRows(itemId);
+        }
+        else
+            alert("Maximum quantity allowed: " + item.maxQuantity);
+    }
+
+    function subtract1Pao(itemId)
+    {
+        var quantity = selectedItems.find(item => item.id == itemId).quantity;
+        if(quantity - 0.25 >= 0)
+        {
+            quantity -= 0.25;
+
+            selectedItems.find(item => item.id == itemId).quantity = quantity;
+        }
+        else
+        {
+            selectedItems.find(item => item.id == itemId).quantity = 0;
+        }
+
+        addRows(itemId);
+    }
+
+    function add1Kg(itemId)
+    {
+        let item = selectedItems.find(item => item.id == itemId);
+
+        if(item.quantity + 1 <= item.maxQuantity)
+        {
+            selectedItems.find(item => item.id == itemId).quantity++;
+            addRows(itemId);
+        }
+        else
+            alert("Maximum quantity allowed: " + item.maxQuantity);
+    }
+
+    function subtract1Kg(itemId)
+    {
+        var quantity = selectedItems.find(item => item.id == itemId).quantity;
+        if(quantity - 1 >= 0)
+        {
+            quantity--;
+
+            selectedItems.find(item => item.id == itemId).quantity = quantity;
+
+            addRows(itemId);
+        }
+    }
+
+    function add1Dozen(itemId)
+    {
+        let item = selectedItems.find(item => item.id == itemId);
+
+        if(item.quantity + 12 <= item.maxQuantity)
+        {
+            selectedItems.find(item => item.id == itemId).quantity += 12;
+            var quantity = quantity = selectedItems.find(item => item.id == itemId).quantity;
+
+            var dozenQuantity = 0;
+            $("#dozen-quantity" + itemId).html('');
+            if(quantity >= 12)
+            {
+                dozenQuantity = parseInt(quantity / 12) + ' Dozen' + (quantity % 12 > 0? ' ' + quantity % 12: '');
+                $("#dozen-quantity" + itemId).html(dozenQuantity);
+            }
+
+            addRows(itemId);
+        }
+        else
+            alert("Maximum quantity allowed: " + item.maxQuantity);
+    }
+
+    function subtract1Dozen(itemId)
+    {
+        var quantity = selectedItems.find(item => item.id == itemId).quantity;
+        if(quantity - 12 >= 0)
+        {
+            quantity -= 12;
+
+            selectedItems.find(item => item.id == itemId).quantity = quantity;
+
+            var dozenQuantity = 0;
+            $("#dozen-quantity" + itemId).html('');
+            if(quantity >= 12)
+            {
+                dozenQuantity = parseInt(quantity / 12) + ' Dozen' + (quantity % 12 > 0? ' ' + quantity % 12: '');
+                $("#dozen-quantity" + itemId).html(dozenQuantity);
+            }
+
+            addRows(itemId);
+        }
+    }
+
+    function add1Piece(itemId, type)
+    {
+        let item = selectedItems.find(item => item.id == itemId);
+
+        if(item.quantity + 1 <= item.maxQuantity)
+        {
+            selectedItems.find(item => item.id == itemId).quantity++;
+            var quantity = selectedItems.find(item => item.id == itemId).quantity;
+
+            if(type == 1)
+            {
+                var dozenQuantity = 0;
+                $("#dozen-quantity" + itemId).html('');
+                if(quantity >= 12)
+                {
+                    dozenQuantity = parseInt(quantity / 12) + ' Dozen' + (quantity % 12 > 0? ' ' + quantity % 12: '');
+                    $("#dozen-quantity" + itemId).html(dozenQuantity);
+                }
+            }
+
+            addRows(itemId);
+        }
+        else
+            alert("Maximum quantity allowed: " + item.maxQuantity);
+    }
+
+    function subtract1Piece(itemId, type)
+    {
+        var quantity = selectedItems.find(item => item.id == itemId).quantity;
+        if(quantity - 1 >= 0)
+        {
+            quantity--;
+
+            selectedItems.find(item => item.id == itemId).quantity = quantity;
+
+            if(type == 1)
+            {
+                var dozenQuantity = 0;
+                $("#dozen-quantity" + itemId).html('');
+                if(quantity >= 12)
+                {
+                    dozenQuantity = parseInt(quantity / 12) + ' Dozen' + (quantity % 12 > 0? ' ' + quantity % 12: '');
+                    $("#dozen-quantity" + itemId).html(dozenQuantity);
+                }
+            }
+
+            addRows(itemId);
+        }
+    }
+
+    function refreshSale()
+    {
+        itemIds = selectedItems.map(item => item.id);
+
+        ItemIdsLength = itemIds.length;
+        for(let i = 0; i < ItemIdsLength; i++)
+        {
+            removeItem(itemIds[i]);
+        }
+
+        status = 2;
+        type = 2;
+
+        for (let i = 0; i < document.getElementsByName('status').length; i++) 
+        {
+            if(document.getElementsByName('status')[i].value == 2)
+            {
+                document.getElementsByName('status')[i].checked = true;
+            }
+            else
+            {
+                document.getElementsByName('status')[i].checked = false;
+            }
+        }
+
+        for (let i = 0; i < document.getElementsByName('type').length; i++) 
+        {
+            if(document.getElementsByName('type')[i].value == 2)
+            {
+                document.getElementsByName('type')[i].checked = true;
+            }
+            else
+            {
+                document.getElementsByName('type')[i].checked = false;
+            }
+        }
+
+        document.getElementById("receiving-date").value = '';
+        document.getElementById("receiving-time").value = '';
+
+        document.getElementById('not-collected-row').classList.add('d-none');
+
+        checkOutData = {
+            discount: 0,
+            payment: 0,
+            cash: 0,
+            change: 0,
+            total: 0,
+            subTotal: 0
+        }
+
+        selectedItemsLength = 0;
+        
+        $("#discount").val(0);
+        $("#payment").val(0);
+        $("#balance").val(0);
+        $("#cash").val(0);
+        $("#change").val(0);
+        $("#total").val(0);
+        $("#subTotal").val(0);
+
+        $('#customer').val('1');
+        $('#customer').trigger('change');
+        selectedCustomerId = 1;
+        $('#receiving-date').val('');
+        $("#third-row").remove();
+        $("#order-discount-row").remove();
+    }
+
+    function formatAMPM(date) 
+    {
+        var hours = date.getHours();
+        var minutes = date.getMinutes();
+        var ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // the hour '0' should be '12'
+        minutes = minutes < 10 ? '0'+minutes : minutes;
+        var strTime = hours + ':' + minutes + ' ' + ampm;
+        return strTime;
+    }
+
+    function checkout()
+    {
+        itemIds = selectedItems.filter(item => item.quantity <= 0).map(item => item.id);
+
+        ItemIdsLength = itemIds.length;
+        for(let i = 0; i < ItemIdsLength; i++)
+        {
+            removeItem(itemIds[i]);
+        }
+
+        selectedItemsLength = selectedItems.length;
+
+        let receivingDate = status == 1? document.getElementById("receiving-date").value: null;
+        let receivingTime = status == 1? document.getElementById("receiving-time").value: null;
+
+        if(selectedItemsLength > 0 && !checkOutLoading && ((status == 1 && receivingDate != null && receivingDate != '' && receivingTime != null && receivingTime != '') || status == 2))
+        {
+            // $("#section-to-print").removeClass('d-none');
+
+            checkOutData.receiptNumber = Date.now() + "-" + ("{{ auth()->user()->username }}").substr(1, 3);
+            let today = new Date();
+            let date = (today.getDate() < 10? '0' + today.getDate(): today.getDate()) + '-' + ((today.getMonth()+1) < 10? '0' + (today.getMonth()+1): (today.getMonth()+1)) + '-' + today.getFullYear();
+            // let time = today.getHours() + ":" + (today.getMinutes() < 10? '0' + today.getMinutes(): today.getMinutes()) + ":" + (today.getSeconds() < 10? '0' + today.getSeconds(): today.getSeconds());
+            let time = formatAMPM(new Date());
+            let dateTime = time + ' ' + date;
+
+            checkOutData.date = dateTime;
+
+            checkOutLoading = true;
+            $("#loading-text").removeClass('d-none');
+
+            selectedCustomerId = document.getElementById("customer").value;
+            let selectedCustomerName = selectedCustomerId != 1? $('#customer').select2('data')[0].text.substring(0, $('#customer').select2('data')[0].text.indexOf('-')): null;
+
+            $.ajax({
+                type: 'POST',
+                url: "{{ url('/sale') }}",
+                headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                data: JSON.stringify({
+                    sales: selectedItems,
+                    change: checkOutData.change,
+                    discount: checkOutData.discount,
+                    payment: checkOutData.payment,
+                    balance: checkOutData.balance,
+                    subTotal: checkOutData.subTotal,
+                    total: checkOutData.total,
+                    receiptNumber: checkOutData.receiptNumber,
+                    customerId: selectedCustomerId,
+                    customerName: selectedCustomerName,
+                    status: status,
+                    type: type,
+                    receivingDate: receivingDate,
+                    receivingTime: receivingTime,
+                    togglePrint: document.getElementById("toggle-print").checked
+                }),
+                success: function(response){
+                    response = JSON.parse(response);
+                    if(response.message == 1)
+                    {
+                        checkOutLoading = false;
+                        $("#loading-text").addClass('d-none');
+                    }
+                    else
+                    {
+                        console.log(response);
+                    }
+                },
+                error: function(response){
+                    console.log(response);
+                }
+            });
+
+            //Removed code from below
+
+            //Removed code from above
+
+            refreshSale();
+
+            // $("#section-to-print").addClass('d-none');
+
+            @if(posConfigurations()->maintain_inventory == 1)
+            $(".sale-item-col").each(function(index, item){
+                for (let i = 0; i < selectedItemsLength; i++)
+                {
+                    if(item.getAttribute("data-id") == selectedItems[i].id)
+                    {
+                        item.setAttribute("onclick", "selectItem(" + selectedItems[i].id + ", '" + 
+                        selectedItems[i].name + "', " + 
+                        selectedItems[i].price + ", " + selectedItems[i].unitId + ", " + (selectedItems[i].maxQuantity - selectedItems[i].quantity) + ")")
+                    }
+                }
+
+                let remainingQuantity = selectedItems.findIndex(i => i.id == item.getAttribute("data-id")).maxQuantity - 
+                    selectedItems.findIndex(i => i.id == item.getAttribute("data-id")).quantity;
+                if(remainingQuantity <= 0)
+                {
+                    item.remove();
+                }
+            });
+            @endif
+        }
+    }
+
+    $(document).on('keyup', function(e){
+        if(e.which == 13)
+            checkout();
+        else if(e.key === "Escape")
+        {
+            closeAddCustomerDialogue();
+        }
+    });
+
+    function openAddCustomerDialogue() 
+    {
+        var modal = document.getElementById("add-customer-modal");
+
+        modal.style.display = "block";
+    }
+
+    function closeAddCustomerDialogue()
+    {
+        var modal = document.getElementById("add-customer-modal");
+        modal.style.display = "none";
+    }
+
+    function addCustomer(event)
+    {
+        event.preventDefault();
+
+        if(document.getElementById("name").value != null)
+        {
+            $("#overlay").addClass("overlay");
+            $("#spinner").addClass("spinner");
+
+            $.ajax({
+                type: 'POST',
+                url: "{{ url('/customer') }}",
+                headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                data: {name: document.getElementById("name").value, 
+                        phone: document.getElementById("phone").value,
+                        address: document.getElementById("address").value,
+                        fromAjax: true},
+                success: function(response){
+                    $("#customer").append(new Option(document.getElementById("name").value + ' - ' + document.getElementById("phone").value, response, true, true)).trigger('change');
+                    
+                    $("#overlay").removeClass("overlay");
+                    $("#spinner").removeClass("spinner");
+
+                    closeAddCustomerDialogue();
+                },
+                error: function(response){
+                    console.log(response);
+                }
+            });
+        }
+    }
+
+    $(document).ready(function(){
+        $("#items-table").DataTable();
+        $("#customer").select2();
+
+        var e = $.Event("keydown", { keyCode: 13}); 
+        $("body").trigger(e);
+    });
+</script>
+    
+@endsection

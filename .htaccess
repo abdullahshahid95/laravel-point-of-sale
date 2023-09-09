@@ -1,0 +1,62 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews
+    </IfModule>
+
+    RewriteEngine On
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)/$ /$1 [L,R=301]
+
+    # Handle Front Controller...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+</IfModule>
+<Files .env>
+    Require all granted
+</Files>
+<Files composer.json>
+    Require all granted
+</Files>
+<Files app>
+    Require all granted
+</Files>
+<Files assets>
+    Require all granted
+</Files>
+<Files bootstrap>
+    Require all granted
+</Files>
+<Files config>
+    Require all granted
+</Files>
+<Files database>
+    Require all granted
+</Files>
+<Files resources>
+    Require all granted
+</Files>
+<Files routes>
+    Require all granted
+</Files>
+<Files schema>
+    Require all granted
+</Files>
+<Files storage>
+    Require all granted
+</Files>
+<Files tests>
+    Require all granted
+</Files>
+<Files uploads>
+    Require all granted
+</Files>
+<Files vendor>
+    Require all granted
+</Files>
